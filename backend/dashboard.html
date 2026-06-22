@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduGuard - Student Risk Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            color: #666;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .stat-card.low .value { color: #27ae60; }
+        .stat-card.medium .value { color: #f39c12; }
+        .stat-card.high .value { color: #e74c3c; }
+        .stat-card.total .value { color: #3498db; }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .btn-filter {
+            background: white;
+            color: #333;
+            border: 2px solid #ddd;
+        }
+
+        .btn-filter:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .btn-filter.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+
+        .students-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .student-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .student-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .student-header {
+            padding: 20px;
+            border-bottom: 3px solid #ddd;
+        }
+
+        .student-header.low { border-bottom-color: #27ae60; }
+        .student-header.medium { border-bottom-color: #f39c12; }
+        .student-header.high { border-bottom-color: #e74c3c; }
+
+        .student-id {
+            color: #999;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .student-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .risk-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .risk-badge.low { background: #d5f4e6; color: #27ae60; }
+        .risk-badge.medium { background: #fef5e7; color: #f39c12; }
+        .risk-badge.high { background: #fadbd8; color: #e74c3c; }
+
+        .risk-score {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .student-details {
+            padding: 20px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .detail-label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .detail-value {
+            color: #333;
+            font-weight: bold;
+        }
+
+        .intervention {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+            margin-top: 15px;
+            font-size: 0.95em;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: white;
+            font-size: 1.2em;
+        }
+
+        .error {
+            background: #fadbd8;
+            color: #c0392b;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: white;
+            font-size: 1.1em;
+        }
+
+        @media (max-width: 768px) {
+            .students-container {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎓 EduGuard Dashboard</h1>
+            <p class="subtitle">Student Risk Assessment & Intervention Planning</p>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card total">
+                <h3>Total Students</h3>
+                <div class="value" id="total-count">0</div>
+            </div>
+            <div class="stat-card low">
+                <h3>Low Risk</h3>
+                <div class="value" id="low-count">0</div>
+            </div>
+            <div class="stat-card medium">
+                <h3>Medium Risk</h3>
+                <div class="value" id="medium-count">0</div>
+            </div>
+            <div class="stat-card high">
+                <h3>High Risk</h3>
+                <div class="value" id="high-count">0</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="Search student by name...">
+            </div>
+            <button class="btn-filter active" data-filter="all">All</button>
+            <button class="btn-filter" data-filter="low">Low Risk</button>
+            <button class="btn-filter" data-filter="medium">Medium Risk</button>
+            <button class="btn-filter" data-filter="high">High Risk</button>
+        </div>
+
+        <div id="content">
+            <div class="loading">Loading student data...</div>
+        </div>
+    </div>
+
+    <script>
+        let allStudents = [];
+        let filteredStudents = [];
+        let currentFilter = 'all';
+        let searchTerm = '';
+
+        async function loadStudents() {
+            try {
+                const response = await fetch('/api/students');
+                if (!response.ok) throw new Error('Failed to load students');
+                
+                allStudents = await response.json();
+                filteredStudents = [...allStudents];
+                updateStats();
+                renderStudents();
+            } catch (error) {
+                document.getElementById('content').innerHTML = 
+                    `<div class="error">❌ Error loading student data: ${error.message}</div>`;
+            }
+        }
+
+        function updateStats() {
+            const low = allStudents.filter(s => s.risk_category === 'LOW').length;
+            const medium = allStudents.filter(s => s.risk_category === 'MEDIUM').length;
+            const high = allStudents.filter(s => s.risk_category === 'HIGH').length;
+
+            document.getElementById('total-count').textContent = allStudents.length;
+            document.getElementById('low-count').textContent = low;
+            document.getElementById('medium-count').textContent = medium;
+            document.getElementById('high-count').textContent = high;
+        }
+
+        function applyFilters() {
+            filteredStudents = allStudents.filter(student => {
+                const matchesFilter = currentFilter === 'all' || 
+                    student.risk_category.toLowerCase() === currentFilter;
+                const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase());
+                return matchesFilter && matchesSearch;
+            });
+            renderStudents();
+        }
+
+        function renderStudents() {
+            if (filteredStudents.length === 0) {
+                document.getElementById('content').innerHTML = 
+                    '<div class="empty-state">No students match your filters</div>';
+                return;
+            }
+
+            const html = filteredStudents.map(student => `
+                <div class="student-card">
+                    <div class="student-header ${student.risk_category.toLowerCase()}">
+                        <div class="student-id">ID: ${student.id}</div>
+                        <div class="student-name">${student.name}</div>
+                        <div>
+                            <span class="risk-badge ${student.risk_category.toLowerCase()}">
+                                ${student.risk_category} RISK
+                            </span>
+                            <div class="risk-score">Score: ${(student.risk_score * 100).toFixed(1)}%</div>
+                        </div>
+                    </div>
+                    <div class="student-details">
+                        <div class="detail-row">
+                            <span class="detail-label">Age</span>
+                            <span class="detail-value">${student.age} years</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Attendance</span>
+                            <span class="detail-value">${student.attendance_pct}%</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">GPA</span>
+                            <span class="detail-value">${student.gpa}/10</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Assignments</span>
+                            <span class="detail-value">${student.assignments_submitted}/${student.assignments_total}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Income Level</span>
+                            <span class="detail-value">${student.family_income_level.charAt(0).toUpperCase() + student.family_income_level.slice(1)}</span>
+                        </div>
+                        <div class="intervention">
+                            <strong>📋 Recommendation:</strong><br>
+                            ${student.intervention}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('content').innerHTML = `
+                <div class="students-container">${html}</div>
+            `;
+        }
+
+        document.querySelectorAll('.btn-filter').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.dataset.filter;
+                applyFilters();
+            });
+        });
+
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            searchTerm = e.target.value;
+            applyFilters();
+        });
+
+        loadStudents();
+    </script>
+</body>
+</html>

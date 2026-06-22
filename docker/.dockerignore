@@ -1,0 +1,15 @@
+# docker/.dockerignore
+# Place this file at the project root (same level as the docker/ folder)
+__pycache__/
+*.pyc
+*.pyo
+.git/
+.gitignore
+.env
+venv/
+node_modules/
+mobile_app/
+infra/
+*.ipynb
+ml_model/data/
+.DS_Store

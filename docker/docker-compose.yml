@@ -1,0 +1,38 @@
+# docker/docker-compose.yml
+# Starts both the API container and a local PostgreSQL container together
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: ..          # builds from project root
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://eduguard_user:EduGuard2024!@db:5432/eduguard_db
+      - MODEL_PATH=/app/ml_model/eduguard_model.pkl
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: eduguard_db
+      POSTGRES_USER: eduguard_user
+      POSTGRES_PASSWORD: EduGuard2024!
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eduguard_user -d eduguard_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
